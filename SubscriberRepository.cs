@@ -19,9 +19,11 @@ public class SubscriberRepository
             .RuleFor(p => p.Email, e => string.Format(toEmailAddressTemplate, e.IndexFaker))
             .Generate(SubscriberCount);
     }
+    
+    public int Count() => SubscriberCount;
 
-    public IEnumerable<Person> GetAllSubscribers() => subscribers;
-
-    public IEnumerable<Person> GetSubscribersByPage(int pageSize, int pageIndex) 
+    public IEnumerable<Person> GetAll() => subscribers;
+    
+    public IEnumerable<Person> GetByPage(int pageSize, int pageIndex) 
         => subscribers.Skip(pageSize * pageIndex).Take(pageSize);
 }

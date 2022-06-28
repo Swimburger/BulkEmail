@@ -15,7 +15,7 @@ public class EmailSender
     private readonly SenderOptions sender;
 
     public EmailSender(
-        SubscriberRepository subscriberRepository, 
+        SubscriberRepository subscriberRepository,
         ISendGridClient sendGridClient,
         IOptions<SenderOptions> senderOptions,
         ILogger<EmailSender> logger,
@@ -31,20 +31,29 @@ public class EmailSender
 
     public async Task SendToSubscribers()
     {
-        var subscribers = subscriberRepository.GetAllSubscribers();
+        var pageSize = 1_000;
+        var subscriberCount = subscriberRepository.Count();
+        var amountOfPages = (int) Math.Ceiling((double) subscriberCount / pageSize);
 
-        foreach (var subscriber in subscribers)
+        for (var pageIndex = 0; pageIndex < amountOfPages; pageIndex++)
         {
+            var subscribers = subscriberRepository.GetByPage(pageSize, pageIndex);
+
             var message = new SendGridMessage
             {
                 From = new EmailAddress(sender.Email, sender.Name),
                 Subject = "Ahoy matey!",
-                HtmlContent = $@"Welcome aboard <b>{htmlEncoder.Encode(subscriber.FullName)}</b> ⚓️"
+                HtmlContent = $@"Welcome aboard matey ⚓️",
+                // max 1000 Personalizations!
+                Personalizations = subscribers.Select(s => new Personalization
+                {
+                    Tos = new List<EmailAddress> {new EmailAddress(s.Email, s.FullName)},
+                    // you can add more personalization properties like Subject, Bcc, From, SendAt, etc.
+                }).ToList()
             };
-            message.AddTo(subscriber.Email, subscriber.FullName);
-        
+
             var response = await sendGridClient.SendEmailAsync(message);
-            if(response.IsSuccessStatusCode) logger.LogInformation("Email queued");
+            if (response.IsSuccessStatusCode) logger.LogInformation("Email queued");
             else logger.LogError("Email not queued");
         }
     }
