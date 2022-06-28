@@ -1,4 +1,5 @@
-﻿using BulkEmail;
+﻿using System.Text.Encodings.Web;
+using BulkEmail;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,9 +14,9 @@ using var host = Host.CreateDefaultBuilder(args)
         services.AddSendGrid(options => options.ApiKey = context.Configuration["SendGridApiKey"]);
         services.AddScoped<SubscriberRepository>();
         services.AddScoped<EmailSender>();
+        services.AddTransient<HtmlEncoder>(_ => HtmlEncoder.Default);
     })
     .Build();
-    
 var emailSender = host.Services.GetRequiredService<EmailSender>();
 
 await emailSender.SendToSubscribers()
