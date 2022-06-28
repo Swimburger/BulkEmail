@@ -43,18 +43,23 @@ public class EmailSender
             {
                 From = new EmailAddress(sender.Email, sender.Name),
                 Subject = "Ahoy matey!",
-                HtmlContent = $@"Welcome aboard <b>-FullName-</b> ⚓️",
+                HtmlContent = @"Welcome aboard <b>-FullName-</b> ⚓️",
+                
                 // max 1000 Personalizations
                 Personalizations = subscribers.Select(s => new Personalization
                 {
                     Tos = new List<EmailAddress> {new EmailAddress(s.Email, s.FullName)},
+                    
                     // Substitutions data is max 10,000 bytes per Personalization object
                     Substitutions = new Dictionary<string, string>
                     {
                         {"-FullName-", htmlEncoder.Encode(s.FullName)}
                     }
                     // you can add more Personalization properties like Subject, Bcc, From, SendAt, etc.
-                }).ToList()
+                }).ToList(),
+                
+                // max 72 hours from now
+                SendAt = DateTimeOffset.Now.AddMinutes(1).ToUnixTimeSeconds()
             };
 
             var response = await sendGridClient.SendEmailAsync(message);
