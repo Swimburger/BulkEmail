@@ -31,40 +31,19 @@ public class EmailSender
 
     public async Task SendToSubscribers()
     {
-        var pageSize = 1_000;
-        var subscriberCount = subscriberRepository.Count();
-        var amountOfPages = (int) Math.Ceiling((double) subscriberCount / pageSize);
+        var subscribers = subscriberRepository.GetAll();
+        var subscriber = subscribers.First();
 
-        for (var pageIndex = 0; pageIndex < amountOfPages; pageIndex++)
+        var message = new SendGridMessage
         {
-            var subscribers = subscriberRepository.GetByPage(pageSize, pageIndex);
-
-            var message = new SendGridMessage
-            {
-                From = new EmailAddress(sender.Email, sender.Name),
-                Subject = "Ahoy matey!",
-                HtmlContent = @"Welcome aboard <b>-FullName-</b> ⚓️",
-                
-                // max 1000 Personalizations
-                Personalizations = subscribers.Select(s => new Personalization
-                {
-                    Tos = new List<EmailAddress> {new EmailAddress(s.Email, s.FullName)},
-                    
-                    // Substitutions data is max 10,000 bytes per Personalization object
-                    Substitutions = new Dictionary<string, string>
-                    {
-                        {"-FullName-", htmlEncoder.Encode(s.FullName)}
-                    }
-                    // you can add more Personalization properties like Subject, Bcc, From, SendAt, etc.
-                }).ToList(),
-                
-                // max 72 hours from now
-                SendAt = DateTimeOffset.Now.AddMinutes(1).ToUnixTimeSeconds()
-            };
-
-            var response = await sendGridClient.SendEmailAsync(message);
-            if (response.IsSuccessStatusCode) logger.LogInformation("Email queued");
-            else logger.LogError("Email not queued");
-        }
+            From = new EmailAddress(sender.Email, sender.Name),
+            Subject = "Ahoy matey!",
+            HtmlContent = "Welcome aboard <b>friend</b> ⚓️",
+        };
+        message.AddTo(new EmailAddress(subscriber.Email, subscriber.FullName));
+        
+        var response = await sendGridClient.SendEmailAsync(message);
+        if (response.IsSuccessStatusCode) logger.LogInformation("Email queued");
+        else logger.LogError("Email not queued");
     }
 }
