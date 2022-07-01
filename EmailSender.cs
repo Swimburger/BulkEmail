@@ -37,8 +37,8 @@ public class EmailSender
             var message = new SendGridMessage
             {
                 From = new EmailAddress(sender.Email, sender.Name),
-                Subject = "Ahoy matey!",
-                HtmlContent = "Welcome aboard <b>friend</b> ⚓️",
+                Subject = $"Ahoy {subscriber.FirstName}!",
+                HtmlContent = $"Welcome aboard <b>{htmlEncoder.Encode(subscriber.FullName)}</b> ⚓️"
             };
 
             message.AddTo(new EmailAddress(subscriber.Email, subscriber.FullName));
