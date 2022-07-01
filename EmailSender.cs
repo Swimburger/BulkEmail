@@ -32,18 +32,20 @@ public class EmailSender
     public async Task SendToSubscribers()
     {
         var subscribers = subscriberRepository.GetAll();
-        var subscriber = subscribers.First();
-
-        var message = new SendGridMessage
+        foreach (var subscriber in subscribers)
         {
-            From = new EmailAddress(sender.Email, sender.Name),
-            Subject = "Ahoy matey!",
-            HtmlContent = "Welcome aboard <b>friend</b> ⚓️",
-        };
-        message.AddTo(new EmailAddress(subscriber.Email, subscriber.FullName));
-        
-        var response = await sendGridClient.SendEmailAsync(message);
-        if (response.IsSuccessStatusCode) logger.LogInformation("Email queued");
-        else logger.LogError("Email not queued");
+            var message = new SendGridMessage
+            {
+                From = new EmailAddress(sender.Email, sender.Name),
+                Subject = "Ahoy matey!",
+                HtmlContent = "Welcome aboard <b>friend</b> ⚓️",
+            };
+
+            message.AddTo(new EmailAddress(subscriber.Email, subscriber.FullName));
+
+            var response = await sendGridClient.SendEmailAsync(message);
+            if (response.IsSuccessStatusCode) logger.LogInformation("Email queued");
+            else logger.LogError("Email not queued");
+        }
     }
 }
