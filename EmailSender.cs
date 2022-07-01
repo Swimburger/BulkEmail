@@ -42,13 +42,19 @@ public class EmailSender
             var message = new SendGridMessage
             {
                 From = new EmailAddress(sender.Email, sender.Name),
-                Subject = "Ahoy matey!",
-                HtmlContent = "Welcome aboard <b>friend</b> ⚓️",
-
+                Subject = "Ahoy -FirstName_Raw-!",
+                HtmlContent = "Welcome aboard <b>-FullName-</b> ⚓️",
+    
                 // max 1000 Personalizations
                 Personalizations = subscribers.Select(s => new Personalization
                 {
                     Tos = new List<EmailAddress> {new EmailAddress(s.Email, s.FullName)},
+                    // Substitutions data is max 10,000 bytes per Personalization object
+                    Substitutions = new Dictionary<string, string>
+                    {
+                        {"-FirstName_Raw-", s.FirstName},
+                        {"-FullName-", htmlEncoder.Encode(s.FullName)}
+                    }
                 }).ToList(),
             };
 
