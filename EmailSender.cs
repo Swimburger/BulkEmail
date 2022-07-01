@@ -31,6 +31,8 @@ public class EmailSender
 
     public async Task SendToSubscribers()
     {
+        var sendAt = DateTimeOffset.Now.AddMinutes(5).ToUnixTimeSeconds();
+    
         var pageSize = 1_000;
         var subscriberCount = subscriberRepository.Count();
         var amountOfPages = (int) Math.Ceiling((double) subscriberCount / pageSize);
@@ -38,13 +40,13 @@ public class EmailSender
         for (var pageIndex = 0; pageIndex < amountOfPages; pageIndex++)
         {
             var subscribers = subscriberRepository.GetByPage(pageSize, pageIndex);
-
+        
             var message = new SendGridMessage
             {
                 From = new EmailAddress(sender.Email, sender.Name),
                 Subject = "Ahoy -FirstName_Raw-!",
                 HtmlContent = "Welcome aboard <b>-FullName-</b> ⚓️",
-    
+
                 // max 1000 Personalizations
                 Personalizations = subscribers.Select(s => new Personalization
                 {
@@ -56,6 +58,9 @@ public class EmailSender
                         {"-FullName-", htmlEncoder.Encode(s.FullName)}
                     }
                 }).ToList(),
+            
+                // max 72 hours from now
+                SendAt = sendAt
             };
 
             var response = await sendGridClient.SendEmailAsync(message);
